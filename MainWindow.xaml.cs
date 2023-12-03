@@ -14,12 +14,30 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Text.RegularExpressions;
 using static System.Net.Mime.MediaTypeNames;
+using AngouriMath.Extensions;
+
 
 namespace custom_pl
+    
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
+    public class vars
+    {
+        public string name;
+        public int type; //0 - int 1 - arr 2 - char 3 - string
+
+        public int value;
+
+        public int size;
+        public List<int> arr = new List<int>();
+
+        public char symb;
+
+        public string text;
+    }
+
     public partial class MainWindow : Window
     {
         public MainWindow()
@@ -27,222 +45,161 @@ namespace custom_pl
             InitializeComponent();
         }
 
-        string[] keywords = { "alignas", "alignof", "andB", "and_eqB", "asma", "auto", "bitandB", "bitorB", "bool", "break", "case", "catch", "char", "char8_tc", "char16_t", "char32_t", "class", "complB", "conceptc", "const", "const_cast", "constevalc", "constexpr", "constinitc", "continue", "co_awaitc", "co_returnc", "co_yieldc", "decltype", "default", "delete", "do", "double", "dynamic_cast", "else", "enum", "explicit", "exportc", "extern", "false", "float", "for", "friend", "goto", "if", "inline", "int", "long", "mutable", "namespace", "new", "noexcept", "notB", "not_eqB", "nullptr", "operator", "orB", "or_eqB", "private", "protected", "public", "register reinterpret_cast", "requiresc", "return", "short", "signed", "sizeof", "static", "string", "static_assert", "static_cast", "struct", "switch", "template", "this", "thread_local", "throw", "true", "try", "typedef", "typeid", "typename", "union", "unsigned", "using Декларации", "using Директива", "virtual", "void", "volatile", "wchar_t", "while", "xorB", "xor_eqB", "cout", "using", "main", "endl", "cin", "#include" };
-        string[] operators = { "{", "}", ";", "->", "[", "]", "(", ")", "++", "--", "typeid", "const_cast", "dynamic_cast", "reinterpret_cast", "static_cast", "sizeof", "~", "!", "-", "+", "&", "*", "/", "new", "delete", ">>", "<<", ">", "<", "=>", "<=", "==", "!=", "^", "|", "||", "&&", "?:", "=", "*=", "/=", "+=", "-=", "%=", ">>=", "<<=", "&=", "|=", "^=", "throw", ",", ".", ".*", "->*", "?", "" };
-        string[] names = { "Ключевое слово", "Идентификатор", "Оператор    ", "Литерал   ", "Комментарий", "Разделитель" };
+        string[] keywords = { "молитва", "аще", "инако", "допрежь", "быть", "цифирь", "целым", "словом", "боуковой", "многи", "молви" };
+        string[] operators = { "помене", "або", "й" };
+        //string[] operators = { "{", "}", ";", "->", "[", "]", "(", ")", "++", "--", "~", "!", "-", "+", "&", "*", "/", ">>", "<<", ">", "<", "=>", "<=", "==", "!=", "^", "|", "||", "&&", "?:", "=", "*=", "/=", "+=", "-=", "%=", ">>=", "<<=", "&=", "|=", "^=", ",", ".", ".*", "->*", "?", "" };
+        //Regex.IsMatch(symb_before.ToString(), @"[\ \+\-\/\*\=\(\)\[\]\{\}\<\>\;]") == true
+        /*
+                    int index = Array.IndexOf(keywords, word);
 
-        private void add_output(ref int i, ref int j, string word, int type)
+                    if (index < 0)
+                        continue;
+         */
+        private void add_output(string word)
         {
-            output_textbox.Text += names[type] + "\t" + word + "\n";
-            i += j;
-            j = 0;
+            output_textbox.Text += word;
         }
 
-        private bool skip_comment(ref int i, ref int j)
+        public string find_next_space(ref int i)
         {
-            if (i + j >= input_textbox.Text.Length)
-            {
-                return false;
-            }
-            if (string.Compare(input_textbox.Text.Substring(i, j), "<-") == 0)
-            {
-                while (input_textbox.Text[i] != '\n') //просто скип до конца строки
-                    i++;
-                return true;
-            }
-            if (string.Compare(input_textbox.Text.Substring(i, j), "#") == 0)
-            {
-                while (input_textbox.Text[i + 1] != '#') //скип до конца комментария
-                    i++;
+            int start = i;
+
+            while (input_textbox.Text[start] != ' ' && start != input_textbox.Text.Length - 2 && input_textbox.Text[start] != '\n' && input_textbox.Text[start] != '\r')
+                start++;
+
+            start++;
+            i = start;
+            while (input_textbox.Text[i] != ' ' && i != input_textbox.Text.Length - 1 && input_textbox.Text[i] != '\n' && input_textbox.Text[i] != '\r')
                 i++;
-                return true;
-            }
-            return false;
+
+            return input_textbox.Text.Substring(start, i - start);
         }
 
-        private bool skip_text(ref int i, ref int j)
+        public string find_next_space_left(int i)
         {
-            if (i + j >= input_textbox.Text.Length)
-            {
-                return false;
-            }
-            if (input_textbox.Text[i] == '"' && i + 1 < input_textbox.Text.Length)
-            {
-                while (input_textbox.Text[i + 1] != '"' && i + 2 < input_textbox.Text.Length)
-                    i++;
+            int end = i;
+
+            while (input_textbox.Text[end] != ' ' && end != 1 && input_textbox.Text[end] != '\n' && input_textbox.Text[end] != '\r')
+                end--;
+
+            i = end;
+            while (input_textbox.Text[i] != ' ' && i != 0 && input_textbox.Text[i] != '\n' && input_textbox.Text[i] != '\r')
+                i--;
+
+            return input_textbox.Text.Substring(i + 1, end - i);
+        }
+
+        public string find_next_quotes(ref int i)
+        {
+            int start = i;
+
+            while (input_textbox.Text[start] != '"' && start != input_textbox.Text.Length - 2 && input_textbox.Text[start] != '\n' && input_textbox.Text[start] != '\r')
+                start++;
+
+            start++;
+            i = start;
+            while (input_textbox.Text[i] != '"' && i != input_textbox.Text.Length - 1 && input_textbox.Text[i] != '\n' && input_textbox.Text[i] != '\r')
                 i++;
-                return true;
-            }
-            return false;
+
+            return input_textbox.Text.Substring(start, i - start);
         }
 
-
-
-
-
-        private bool find_keyword(ref int i, ref int j, string[] keywords)
+        public string find_next_comma(ref int i)
         {
-            string word = input_textbox.Text.Substring(i, j);
+            int start = i;
 
-            skip_comment(ref i, ref j);
+            while (input_textbox.Text[start] != ' ' && start != input_textbox.Text.Length - 2 && input_textbox.Text[start] != '\n' && input_textbox.Text[start] != '\r')
+                start++;
 
-            if (i != 0 && j < input_textbox.Text.Length - i)
-            {
-                char symb_after = input_textbox.Text[j + i];
-                char symb_before = input_textbox.Text[i - 1];
+            start++;
+            i = start;
+            while (input_textbox.Text[i] != ',' && i != input_textbox.Text.Length - 1 && input_textbox.Text[i] != '\n' && input_textbox.Text[i] != '\r')
+                i++;
 
-                if (Char.IsSeparator(symb_after) == true || symb_after == '(' || symb_after == ')' || symb_after == ';')
-                {
-                    if (Char.IsSeparator(symb_before) == true || symb_before == '(' || symb_before == ')')
-                    {
-                        for (int z = 0; z < keywords.Length; z++)
-                        {
-                            if (string.Compare(input_textbox.Text.Substring(i, j), keywords[z]) == 0)
-                            {
-                                add_output(ref i, ref j, input_textbox.Text.Substring(i, j), 0);
-                                return true;
-                            }
-                        }
-                    }
-                }
-            }
-            else
-            {
-                for (int z = 0; z < keywords.Length; z++)
-                {
-                    if (string.Compare(input_textbox.Text.Substring(i, j), keywords[z]) == 0)
-                    {
-                        add_output(ref i, ref j, input_textbox.Text.Substring(i, j), 0);
-                        return true;
-                    }
-                }
-            }
-
-
-
-
-            if (i != 0 && j < input_textbox.Text.Length - i - 1)
-            {
-                char symb_after = input_textbox.Text[j + i];
-                char symb_before = input_textbox.Text[i - 1];
-
-                if (Char.IsSeparator(symb_after) == true || input_textbox.Text[j + i + 1] == '\n' || Regex.IsMatch(symb_after.ToString(), @"[\ \+\-\/\*\=\(\)\[\]\{\}\<\>\;]") == true)
-                {
-                    if (Char.IsSeparator(symb_before) == true || symb_before == '\n' || Regex.IsMatch(symb_before.ToString(), @"[\ \+\-\/\*\=\(\)\[\]\{\}\<\>\;]") == true)
-                    {
-                        bool flag = true;
-
-                        for (int f = 0; f < keywords.Length; f++)
-                            if (string.Compare(word, keywords[f]) == 0) //чек на несовпадение с ключевыми словами
-                                flag = false;
-
-                        for (int f = 0; f < operators.Length; f++)
-                            if (string.Compare(word, operators[f]) == 0) //чек на несовпадение с операторами
-                                flag = false;
-
-                        for (int k = 0; k < word.Length; k++)
-                            if (Char.IsLetter(word[k]) == false && word[k] != '_' && word[k] != '-') //чек на отсутсвие символов
-                                flag = false;
-
-                        if (flag)
-                        {
-                            add_output(ref i, ref j, word, 1);
-                            return true;
-                        }
-                    }
-                }
-            }
-
-
-
-
-            if (i != 0 && j < input_textbox.Text.Length - i - 1)
-            {
-                char symb_after = input_textbox.Text[j + i];
-                char symb_before = input_textbox.Text[i - 1];
-
-                if (Char.IsSeparator(symb_after) == true || Char.IsLetter(symb_after) == true || Char.IsNumber(symb_after) == true || Regex.IsMatch(symb_after.ToString(), @"[\(\)\[\]\{\}\'\ ]$") == true || input_textbox.Text[j + i + 1] == '\n' || symb_after == '"' || symb_after == '\n')
-                    if (Char.IsSeparator(symb_before) == true || Char.IsLetter(symb_before) == true || Char.IsNumber(symb_before) == true || Regex.IsMatch(symb_before.ToString(), @"[\(\)\[\]\{\}\'\ ]$") == true || symb_before == '"')
-                        for (int z = 0; z < operators.Length; z++)
-                        {
-                            if (string.Compare(word, operators[z]) == 0)
-                            {
-                                add_output(ref i, ref j, word, 2);
-                                return true;
-                            }
-                        }
-            }
-            else
-            {
-                for (int z = 0; z < operators.Length; z++)
-                {
-                    if (string.Compare(word, operators[z]) == 0)
-                    {
-                        add_output(ref i, ref j, word, 2);
-                        return true;
-                    }
-                }
-            }
-
-
-
-
-
-
-            if (i != 0 && j < input_textbox.Text.Length - i)
-            {
-                char symb_after = input_textbox.Text[j + i];
-                char symb_before = input_textbox.Text[i];
-
-                if (Char.IsSeparator(symb_after) == true || Regex.IsMatch(symb_after.ToString(), @"[\}\)\]\'\ \,\;\+\-\*\/]$") == true)
-                {
-                    if (Char.IsSeparator(symb_before) == true || Regex.IsMatch(symb_after.ToString(), @"[\{\(\[\'\ \,\;\+\-\*\/]$") == true)
-                    {
-                        bool flag = true;
-                        for (int k = 0; k < word.Length; k++)
-                            if (Char.IsNumber(word[k]) == false && word[k] != '.') //чек на отсутсвие символов
-                                flag = false;
-
-                        if (flag)
-                        {
-                            add_output(ref i, ref j, word, 3);
-                            return true;
-                        }
-                    }
-                }
-                if (symb_before == '"')
-                {
-                    while (input_textbox.Text[j + i] != '"')
-                        j += 1;
-
-                    add_output(ref i, ref j, input_textbox.Text.Substring(i, j + 1), 3);
-                    i += 1;
-                    return true;
-                }
-            }
-            return false;
+            return input_textbox.Text.Substring(start, i - start);
         }
-
-
-
-
-
-
-
 
         private void parsing(object sender, RoutedEventArgs e)
         {
             output_textbox.Text = "";
             int i, j;
+            string[] new_var = { };
+            string[] new_var_type = { };
+            string[] new_var_value = { };
+            List < vars > variables = new List<vars>();
+
+            for (i = 0; i < input_textbox.Text.Length; i++)
+            {
+
+
+            }
+
+
+
+
 
             for (i = 0; i < input_textbox.Text.Length; i++)
             {
                 for (j = 1; j <= input_textbox.Text.Length - i && j < 20; j++)
                 {
-                    find_keyword(ref i, ref j, keywords);
+                    string word = input_textbox.Text.Substring(i, j);
+
+                    if (word == "молви")
+                    {
+                        add_output(find_next_quotes(ref i));
+                        break;
+                    }
+                    if (word == "быть")
+                    {
+                        string name = find_next_space_left(i);
+                        string type = find_next_space(ref i);
+
+                        if (type == "целым")
+                        {
+                            vars newvar = new vars();
+                            newvar.name = name;
+                            newvar.type = 0;
+                            newvar.value = (int)find_next_space(ref i).EvalNumerical();
+                            variables.Add(newvar);
+                        }
+
+                        if (type == "многи")
+                        {
+                            vars newvar = new vars();
+                            newvar.name = name;
+                            newvar.type = 1;
+                            int size = 0;
+
+                            while (true)
+                            {
+                                newvar.arr.Add((int)find_next_comma(ref i).EvalNumerical());
+                                size++;
+
+                                if (input_textbox.Text[i] == '\n' || input_textbox.Text[i] == '\r')
+                                    break;
+                            }
+                            newvar.size = size;
+                            variables.Add(newvar);
+                        }
+
+                        if (type == "словом")
+                        {
+
+                        }
+
+                        if (type == "боуковой")
+                        {
+
+                        }
+
+                        break;
+                    }
+                    if (word == "еси")
+                    {
+
+                    }
                 }
             }
-
 
         }
     }
