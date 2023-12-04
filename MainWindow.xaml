@@ -5,24 +5,51 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:custom_pl"
         mc:Ignorable="d"
-        Title="ОКОНЪ" Height="450" Width="800">
+        Title="ОКОНЪ СвятоСкриптъ Сбиратилъ" FontFamily="TriodPostnaja" Height="450" Width="800">
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="31*" />
-            <ColumnDefinition Width="169*"/>
-            <ColumnDefinition Width="200*" />
-        </Grid.ColumnDefinitions>
-        <TextBox x:Name="input_textbox" FontFamily="TriodPostnaja"  FontSize="18" AcceptsReturn="True" Margin="10,30,5,10" TextWrapping="Wrap" Text="" Grid.ColumnSpan="2">
-            <TextBox.Background>
-                <ImageBrush ImageSource="/Семистрельныя_икона_с_частицей.jpg" Stretch="UniformToFill" Opacity="0.2"/>
-            </TextBox.Background>
-        </TextBox>
-        <TextBox x:Name="output_textbox" FontFamily="TriodPostnaja"  FontSize="18" AcceptsReturn="True" Grid.Column="2" Margin="5,30,10,10" TextWrapping="Wrap" Text="">
-            <TextBox.Background>
-                <ImageBrush ImageSource="/ecc36163a9a386e4028b9f09a2l8--kartiny-i-panno-ikona-spasitelya.jpg" Stretch="UniformToFill" Opacity="0.2"/>
-            </TextBox.Background>
-        </TextBox>
-        <Button Content="Прочитать молитву" Click="parsing" FontFamily="TriodPostnaja" HorizontalAlignment="Left" VerticalAlignment="Top" Width="179" BorderBrush="#FF8C8C8C" Background="White" Height="22" Margin="51,4,0,0" Grid.Column="1" FontSize="16"/>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="22px"/>
+            <RowDefinition />
+        </Grid.RowDefinitions>
 
+
+        <Menu Grid.Row="0">
+            
+            <MenuItem Header="Файлъ" FontFamily="TriodPostnaja" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" BorderBrush="#FF8C8C8C" Background="White" Margin="5,2,3,2" FontSize="14">
+                <MenuItem Header="Явить" Click="open"/>
+                <MenuItem Header="Хоронить" Click="save"/>
+            </MenuItem>
+
+            <MenuItem x:Name="read" Header="Прочитать" FontFamily="TriodPostnaja" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  BorderBrush="#FF8C8C8C" Background="White" Margin="3,2,3,2" FontSize="14"/>
+            <MenuItem x:Name="start" Header="Поискъ" Click="parsing" FontFamily="TriodPostnaja" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" BorderBrush="#FF8C8C8C" Background="White" Margin="3,2,3,2" FontSize="14"/>
+            <MenuItem x:Name="View" Header="Взоръ"   FontFamily="TriodPostnaja" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  BorderBrush="#FF8C8C8C" Background="White" Margin="3,2,3,2" FontSize="14">
+                <MenuItem Header="Ширь">
+                    <Slider x:Name="font_size_slider" Width="120" Minimum="5" Maximum="28" Value="14" ValueChanged="set_font_size"/>
+                </MenuItem>
+            </MenuItem>
+            <MenuItem x:Name="Window" Header="Окно"  FontFamily="TriodPostnaja" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" BorderBrush="#FF8C8C8C" Background="White"  Margin="3,2,3,2" FontSize="14" />
+            <MenuItem x:Name="_ref" Header="Грамота"   FontFamily="TriodPostnaja" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  BorderBrush="#FF8C8C8C" Background="White"  Margin="3,2,3,2" FontSize="14" />
+           
+        </Menu>
+        <Grid Grid.Row="1">
+            
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="100*"/>
+                <ColumnDefinition Width="100*" />
+             </Grid.ColumnDefinitions>
+            
+            <TextBox Grid.Column="0" x:Name="input_textbox" FontFamily="TriodPostnaja"  FontSize="18" AcceptsReturn="True" Margin="5,0,10,10" TextWrapping="Wrap" VerticalScrollBarVisibility="Visible">
+                <TextBox.Background>
+                    <ImageBrush ImageSource="/Семистрельныя_икона_с_частицей.jpg" Stretch="UniformToFill" Opacity="0.2"/>
+            </TextBox.Background>
+            </TextBox>
+
+            <TextBox Grid.Column="1" x:Name="output_textbox" FontFamily="TriodPostnaja"  FontSize="18" AcceptsReturn="True" Margin="5,0,10,10" TextWrapping="Wrap" VerticalScrollBarVisibility="Visible">
+                <TextBox.Background>
+                    <ImageBrush ImageSource="/ecc36163a9a386e4028b9f09a2l8--kartiny-i-panno-ikona-spasitelya.jpg" Stretch="UniformToFill" Opacity="0.2"/>
+                </TextBox.Background>
+            </TextBox>
+            
+        </Grid>
     </Grid>
 </Window>

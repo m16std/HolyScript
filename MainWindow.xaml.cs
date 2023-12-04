@@ -1,28 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Text.RegularExpressions;
-using static System.Net.Mime.MediaTypeNames;
 using AngouriMath.Extensions;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
+using Microsoft.Win32;
 
 
 namespace custom_pl
     
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public class vars
     {
         public string name;
@@ -32,6 +19,10 @@ namespace custom_pl
         public List<int> arr = new List<int>();
         public char symb;
         public string text;
+    }
+    public class code_param
+    {
+        public string code;
     }
 
     public partial class MainWindow : Window
@@ -43,13 +34,10 @@ namespace custom_pl
 
         string[] keywords = { "молитва", "аще", "инако", "допрежь", "быть", "цифирь", "целым", "словом", "боуковой", "многи", "молви" };
         string[] operators = { "худо", "вяще", "есть", "або", "й", "въ" };
-        //string[] operators = { "{", "}", ";", "->", "[", "]", "(", ")", "++", "--", "~", "!", "-", "+", "&", "*", "/", ">>", "<<", ">", "<", "=>", "<=", "==", "!=", "^", "|", "||", "&&", "?:", "=", "*=", "/=", "+=", "-=", "%=", ">>=", "<<=", "&=", "|=", "^=", ",", ".", ".*", "->*", "?", "" };
-        //Regex.IsMatch(symb_before.ToString(), @"[\ \+\-\/\*\=\(\)\[\]\{\}\<\>\;]") == true
-
 
         public string remove_some_shit(string text)
         {
-            text = text.Trim(new Char[] { ' ', '\n', '\r' });
+            text = text.Trim(new Char[] { ' ', '\n', '\r', '"' });
             return text;
         }
 
@@ -185,246 +173,269 @@ namespace custom_pl
             if (start == -1 || end == -1)
                 return;
 
-            for (i = start; i < end; i++)
-            {
-                for (j = 1; j <= end - i && j < 20; j++)
-                {
-                    string word = input_textbox.Text.Substring(i, j);
+            i = start;
 
-                    if (word == "молви")
+            while (i < end)
+            {
+                string word = find_next_space(ref i);
+
+                if (word == "молвить")
+                {
+                    add_output(find_next_quotes(ref i));
+                }
+                if (word == "придать")
+                {
+                    string name = find_next_space_left(i - 2);
+                    string chislo = find_next_space(ref i);
+                    for (int z = 0; z < variables.Count; z++)
                     {
-                        add_output(find_next_quotes(ref i));
-                        break;
+                        if (variables[z].type != 0)
+                            continue;
+
+                        if (variables[z].name != name)
+                            continue;
+
+                        variables[z].value += (int)chislo.EvalNumerical();
                     }
-                    if (word == "придать")
+                }
+                if (word == "быть")
+                {
+                    string name = find_next_space_left(i-2);
+                    string type = find_next_space(ref i);
+
+                    if (type == "цифирь")
                     {
-                        string name = find_next_space_left(i);
-                        string chislo = find_next_space(ref i);
-                        for (int z = 0; z < variables.Count; z++)
+                        vars newvar = new vars();
+                        newvar.name = name;
+                        newvar.type = 0;
+                        newvar.value = (int)find_next_space(ref i).EvalNumerical();
+                        variables.Add(newvar);
+                    }
+
+                    if (type == "многи")
+                    {
+                        vars newvar = new vars();
+                        newvar.name = name;
+                        newvar.type = 1;
+                        int size = 0;
+
+                        while (true)
+                        {
+                            newvar.arr.Add((int)find_next_comma(ref i).EvalNumerical());
+                            size++;
+
+                            if (input_textbox.Text[i] == '\n' || input_textbox.Text[i] == '\r')
+                                break;
+                        }
+                        newvar.size = size;
+                        variables.Add(newvar);
+                    }
+
+                    if (type == "словом")
+                    {
+
+                    }
+
+                    if (type == "боуковой")
+                    {
+
+                    }
+                }
+                if (word == "аще")
+                {
+                    bool left_arr = false, right_arr = false;
+                    int var1_val = 0, var2_val = 0;
+                    int pos_val = 0;
+                    int numericValue;
+                    string pos = "", vi;
+                    string var1 = find_next_space(ref i);
+                    string condition = find_next_space(ref i);
+                    if (condition == "въ")
+                    {
+                        left_arr = true;
+                        vi = condition;
+                        pos = find_next_space(ref i);
+                        bool posisNumber = int.TryParse(pos, out numericValue);
+                        if (!posisNumber)
+                            for (int z = 0; z < variables.Count; z++)
+                            {
+                                if (variables[z].type != 0)
+                                    continue;
+
+                                if (variables[z].name != pos)
+                                    continue;
+
+                                pos_val = variables[z].value;
+                            }
+                        else
+                            pos_val = (int)pos.EvalNumerical();
+
+                        condition = find_next_space(ref i);
+
+                        for (int z = 0; z < variables.Count; z++) //если массив
+                        {
+                            if (variables[z].type != 1)
+                                continue;
+
+                            if (variables[z].name != var1)
+                                continue;
+
+                            var1_val = variables[z].arr[pos_val];
+                        }
+                    }
+                    string var2 = find_next_space(ref i);
+                    vi = find_next_space(ref i);
+                    if (vi == "въ")
+                    {
+                        right_arr = true;
+                        pos = find_next_space(ref i);
+                        bool posisNumber = int.TryParse(pos, out numericValue);
+                        if (!posisNumber)
+                            for (int z = 0; z < variables.Count; z++)
+                            {
+                                if (variables[z].type != 0)
+                                    continue;
+
+                                if (variables[z].name != pos)
+                                    continue;
+
+                                pos_val = variables[z].value;
+                            }
+                        else
+                            pos_val = (int)pos.EvalNumerical();
+
+                        condition = find_next_space(ref i);
+
+                        for (int z = 0; z < variables.Count; z++) //если массив
+                        {
+                            if (variables[z].type != 1)
+                                continue;
+
+                            if (variables[z].name != var2)
+                                continue;
+
+                            var2_val = variables[z].arr[pos_val];
+                        }
+                    }
+
+                    bool var1isNumber = int.TryParse(var1, out numericValue);
+                    bool var2isNumber = int.TryParse(var2, out numericValue);
+
+
+                    if (var1isNumber)
+                        var1_val = (int)var1.EvalNumerical();
+                    else if (!left_arr)
+                    {
+                        for (int z = 0; z < variables.Count; z++) //если целое
                         {
                             if (variables[z].type != 0)
                                 continue;
 
-                            if (variables[z].name != name)
+                            if (variables[z].name != var1)
                                 continue;
 
-                            variables[z].value += (int)chislo.EvalNumerical();
-                            break;
+                            var1_val = variables[z].value;
+                        }
+
+                    }
+                    if (var2isNumber)
+                        var2_val = (int)var2.EvalNumerical();
+                    else if (!right_arr)
+                    {
+                        for (int z = 0; z < variables.Count; z++) //если целое
+                        {
+                            if (variables[z].type != 0)
+                                continue;
+
+                            if (variables[z].name != var2)
+                                continue;
+
+                            var2_val = variables[z].value;
                         }
                     }
-                    if (word == "быть")
+
+                    if (condition == "есть")
                     {
-                        string name = find_next_space_left(i);
-                        string type = find_next_space(ref i);
-
-                        if (type == "цифирь")
-                        {
-                            vars newvar = new vars();
-                            newvar.name = name;
-                            newvar.type = 0;
-                            newvar.value = (int)find_next_space(ref i).EvalNumerical();
-                            variables.Add(newvar);
-                        }
-
-                        if (type == "многи")
-                        {
-                            vars newvar = new vars();
-                            newvar.name = name;
-                            newvar.type = 1;
-                            int size = 0;
-
-                            while (true)
-                            {
-                                newvar.arr.Add((int)find_next_comma(ref i).EvalNumerical());
-                                size++;
-
-                                if (input_textbox.Text[i] == '\n' || input_textbox.Text[i] == '\r')
-                                    break;
-                            }
-                            newvar.size = size;
-                            variables.Add(newvar);
-                        }
-
-                        if (type == "словом")
-                        {
-
-                        }
-
-                        if (type == "боуковой")
-                        {
-
-                        }
-
-                        break;
-                    }
-                    if (word == "аще")
-                    {
-                        bool left_arr = false, right_arr = false;
-                        int var1_val = 0, var2_val = 0;
-                        int pos_val = 0;
-                        int numericValue;
-                        string pos = "", vi;
-                        string var1 = find_next_space(ref i);
-                        string condition = find_next_space(ref i);
-                        if(condition == "въ")
-                        {
-                            left_arr = true;
-                            vi = condition;
-                            pos = find_next_space(ref i);
-                            bool posisNumber = int.TryParse(pos, out numericValue);
-                            if(!posisNumber)
-                                for (int z = 0; z < variables.Count; z++) 
-                                {
-                                    if (variables[z].type != 0)
-                                        continue;
-
-                                    if (variables[z].name != pos)
-                                        continue;
-
-                                    pos_val = variables[z].value;
-                                }
-                            else
-                                pos_val = (int)pos.EvalNumerical();
-
-                            condition = find_next_space(ref i);
-
-                            for (int z = 0; z < variables.Count; z++) //если массив
-                            {
-                                if (variables[z].type != 1)
-                                    continue;
-
-                                if (variables[z].name != var1)
-                                    continue;
-
-                                var1_val = variables[z].arr[pos_val];
-                            }
-                        }
-                        string var2 = find_next_space(ref i);
-                        vi = find_next_space(ref i);
-                        if (vi == "въ")
-                        {
-                            right_arr = true;
-                            pos = find_next_space(ref i);
-                            bool posisNumber = int.TryParse(pos, out numericValue);
-                            if (!posisNumber)
-                                for (int z = 0; z < variables.Count; z++)
-                                {
-                                    if (variables[z].type != 0)
-                                        continue;
-
-                                    if (variables[z].name != pos)
-                                        continue;
-
-                                    pos_val = variables[z].value;
-                                }
-                            else
-                                pos_val = (int)pos.EvalNumerical();
-
-                            condition = find_next_space(ref i);
-
-                            for (int z = 0; z < variables.Count; z++) //если массив
-                            {
-                                if (variables[z].type != 1)
-                                    continue;
-
-                                if (variables[z].name != var2)
-                                    continue;
-
-                                var2_val = variables[z].arr[pos_val];
-                            }
-                        }
-
-                        bool var1isNumber = int.TryParse(var1, out numericValue);
-                        bool var2isNumber = int.TryParse(var2, out numericValue);
-
-
-                        if (var1isNumber)
-                            var1_val = (int)var1.EvalNumerical();
-                        else if (!left_arr)
-                        {
-                            for (int z = 0; z < variables.Count; z++) //если целое
-                            {
-                                if (variables[z].type != 0)
-                                    continue;
-
-                                if (variables[z].name != var1)
-                                    continue;
-
-                                var1_val = variables[z].value;
-                            }
-
-                        }
-                        if (var2isNumber)
-                            var2_val = (int)var2.EvalNumerical();
-                        else if (!right_arr)
-                        {
-                            for (int z = 0; z < variables.Count; z++) //если целое
-                            {
-                                if (variables[z].type != 0)
-                                    continue;
-
-                                if (variables[z].name != var2)
-                                    continue;
-
-                                var2_val = variables[z].value;
-                            }
-                        }
-
-                        if (condition == "есть")
-                        {
-                            if (var1_val == var2_val)
-                            {
-                                break; //условие выполнилось, выходим, читаем дальше
-                            }
-                            else
-                            {
-                                find_inako(ref i, end);
-                                break;
-                            }
-                        }
-                        if (condition == "худо")
-                        {
-                            if (var1_val < var2_val)
-                            {
-                                break; //условие выполнилось, выходим, читаем дальше
-                            }
-                            else
-                            {
-                                find_inako(ref i, end);
-                                break;
-                            }
-                        }
-                        if (condition == "вяще")
-                        {
-                            if (var1_val > var2_val)
-                            {
-                                break; //условие выполнилось, выходим, читаем дальше
-                            }
-                            else
-                            {
-                                find_inako(ref i, end);
-                                break;
-                            }
+                        if (var1_val != var2_val)
+                        { 
+                            find_inako(ref i, end);
                         }
                     }
-                    if (word == "инако")
+                    if (condition == "худо")
                     {
-                        while (i < end)
+                        if (var1_val > var2_val)
                         {
-                            if (input_textbox.Text[i] == '\n')
-                                break;
-                            i++;
+                            find_inako(ref i, end);
                         }
-                        i++;
-                        while (i < end)
+                    }
+                    if (condition == "вяще")
+                    {
+                        if (var1_val > var2_val)
                         {
-                            if (input_textbox.Text[i] == '\n')
-                                break;
-                            i++;
+                            find_inako(ref i, end);
                         }
                     }
                 }
+                if (word == "инако")
+                {
+                    while (i < end)
+                    {
+                        if (input_textbox.Text[i] == '\n')
+                            break;
+                        i++;
+                    }
+                    i++;
+                    while (i < end)
+                    {
+                        if (input_textbox.Text[i] == '\n')
+                            break;
+                        i++;
+                    }
+                }
+
             }
+            add_output("Аминь");
+        }
+        private void open(object sender, RoutedEventArgs e)
+        {
+            var yalm = @"";
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            if (openFileDialog.ShowDialog() == true)
+                yalm = System.IO.File.ReadAllText(openFileDialog.FileName);
+
+            var deserializer = new DeserializerBuilder().WithNamingConvention(UnderscoredNamingConvention.Instance).Build();
+            var parameter = deserializer.Deserialize<code_param>(yalm);
+            input_textbox.Text = parameter.code;
+        }
+        /*
+        private void save(object sender, RoutedEventArgs e)
+        {
+            var yaml = input_textbox.Text.Replace("\n", "\n\n");
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            saveFileDialog.Filter = "Text file (*.txt)|*.txt";
+            if (saveFileDialog.ShowDialog() == true)
+                System.IO.File.WriteAllText(saveFileDialog.FileName, yaml);
+        */
+        private void save(object sender, RoutedEventArgs e)
+        {
+            code_param parameter = new code_param();
+            parameter.code = input_textbox.Text;
+
+            var serializer = new SerializerBuilder().WithNamingConvention(CamelCaseNamingConvention.Instance).Build();
+            var yaml = serializer.Serialize(parameter);
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            saveFileDialog.Filter = "Text file (*.txt)|*.txt";
+            if (saveFileDialog.ShowDialog() == true)
+                System.IO.File.WriteAllText(saveFileDialog.FileName, yaml);
+        }
+        private void set_font_size(object sender, RoutedEventArgs e)
+        {
+            if (input_textbox == null)
+                return;
+            input_textbox.FontSize = font_size_slider.Value;
+            output_textbox.FontSize = font_size_slider.Value;
         }
     }
 }
