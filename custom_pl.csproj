@@ -8,7 +8,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="ecc36163a9a386e4028b9f09a2l8--kartiny-i-panno-ikona-spasitelya.jpg" />
+    <None Remove="Семистрельныя_икона_с_частицей.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AngouriMath" Version="1.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="ecc36163a9a386e4028b9f09a2l8--kartiny-i-panno-ikona-spasitelya.jpg" />
+    <Resource Include="Семистрельныя_икона_с_частицей.jpg" />
   </ItemGroup>
 
 </Project>

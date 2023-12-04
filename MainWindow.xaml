@@ -5,15 +5,24 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:custom_pl"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="ОКОНЪ" Height="450" Width="800">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="31*" />
+            <ColumnDefinition Width="169*"/>
+            <ColumnDefinition Width="200*" />
         </Grid.ColumnDefinitions>
-        <TextBox x:Name="input_textbox" FontFamily="TriodPostnaja"  FontSize="18" AcceptsReturn="True" HorizontalAlignment="Stretch" Margin="10,30,5,10" TextWrapping="Wrap" Text="" VerticalAlignment="Stretch"/>
-        <TextBox x:Name="output_textbox" FontFamily="TriodPostnaja"  FontSize="18" AcceptsReturn="True" Grid.Column="1" HorizontalAlignment="Stretch" Margin="5,30,10,10" TextWrapping="Wrap" Text="" VerticalAlignment="Stretch"/>
-        <Button Content="Прочитать" Click="parsing" FontFamily="TriodPostnaja" HorizontalAlignment="Left" Margin="10,5,0,0" VerticalAlignment="Top" Width="73"/>
+        <TextBox x:Name="input_textbox" FontFamily="TriodPostnaja"  FontSize="18" AcceptsReturn="True" Margin="10,30,5,10" TextWrapping="Wrap" Text="" Grid.ColumnSpan="2">
+            <TextBox.Background>
+                <ImageBrush ImageSource="/Семистрельныя_икона_с_частицей.jpg" Stretch="UniformToFill" Opacity="0.2"/>
+            </TextBox.Background>
+        </TextBox>
+        <TextBox x:Name="output_textbox" FontFamily="TriodPostnaja"  FontSize="18" AcceptsReturn="True" Grid.Column="2" Margin="5,30,10,10" TextWrapping="Wrap" Text="">
+            <TextBox.Background>
+                <ImageBrush ImageSource="/ecc36163a9a386e4028b9f09a2l8--kartiny-i-panno-ikona-spasitelya.jpg" Stretch="UniformToFill" Opacity="0.2"/>
+            </TextBox.Background>
+        </TextBox>
+        <Button Content="Прочитать молитву" Click="parsing" FontFamily="TriodPostnaja" HorizontalAlignment="Left" VerticalAlignment="Top" Width="179" BorderBrush="#FF8C8C8C" Background="White" Height="22" Margin="51,4,0,0" Grid.Column="1" FontSize="16"/>
 
     </Grid>
 </Window>
