@@ -20,7 +20,7 @@
                 <MenuItem Header="Хоронить" Click="save"/>
             </MenuItem>
 
-            <MenuItem x:Name="read" Header="Прочитать" FontFamily="TriodPostnaja" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  BorderBrush="#FF8C8C8C" Background="White" Margin="3,2,3,2" FontSize="14"/>
+            <MenuItem x:Name="read_code" Click="parsing" Header="Прочитать" FontFamily="TriodPostnaja" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  BorderBrush="#FF8C8C8C" Background="White" Margin="3,2,3,2" FontSize="14"/>
             <MenuItem x:Name="start" Header="Поискъ" Click="parsing" FontFamily="TriodPostnaja" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" BorderBrush="#FF8C8C8C" Background="White" Margin="3,2,3,2" FontSize="14"/>
             <MenuItem x:Name="View" Header="Взоръ"   FontFamily="TriodPostnaja" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  BorderBrush="#FF8C8C8C" Background="White" Margin="3,2,3,2" FontSize="14">
                 <MenuItem Header="Ширь">
