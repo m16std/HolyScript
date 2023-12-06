@@ -5,6 +5,7 @@ using AngouriMath.Extensions;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 using Microsoft.Win32;
+using System.Windows.Automation;
 
 
 namespace custom_pl
@@ -41,7 +42,6 @@ namespace custom_pl
             text = text.Trim(new Char[] { ' ', '\n', '\r', '"' });
             return text;
         }
-
         private void add_output(string word)
         {
             output_textbox.Text += word + "\n";
@@ -50,24 +50,11 @@ namespace custom_pl
         {
             int start = i;
 
-            while (input_textbox.Text[start] != ' ' && start != input_textbox.Text.Length - 2 && input_textbox.Text[start] != '\n' && input_textbox.Text[start] != '\r' && start != 0)
+            while (input_textbox.Text[start] == ' ' && start != input_textbox.Text.Length - 2 && input_textbox.Text[start] != '\n' && input_textbox.Text[start] != '\r' && start != 0)
                 start++;
 
             i = start + 1;
             while (input_textbox.Text[i] != ' ' && i != input_textbox.Text.Length - 1 && input_textbox.Text[i] != '\n' && input_textbox.Text[i] != '\r')
-                i++;
-
-            return remove_some_shit(input_textbox.Text.Substring(start, i - start));
-        }
-        public string find_next_trans(ref int i)
-        {
-            int start = i;
-
-            while (input_textbox.Text[start] != ' ' && start != input_textbox.Text.Length - 2 && input_textbox.Text[start] != '\n' && input_textbox.Text[start] != '\r' && start != 0)
-                start++;
-
-            i = start + 1;
-            while (input_textbox.Text[i] != '\n' && input_textbox.Text[i] != '\r')
                 i++;
 
             return remove_some_shit(input_textbox.Text.Substring(start, i - start));
@@ -163,15 +150,23 @@ namespace custom_pl
         }
         public void find_amin(ref int i, int end)
         {
-            int x = i;
+            int x = i, inner = 1;
             bool flag = false;
             while (x < end)
             {
                 string inako = find_next_space(ref x);
+                if (inako == "допрежь" || inako == "аще")
+                {
+                    inner++;
+                }
                 if (inako == "Аминь")
                 {
-                    flag = true;
-                    break;
+                    inner--;
+                    if (inner == 0)
+                    {
+                        flag = true;
+                        break;
+                    }
                 }
             }
             if (flag) //найдено инако
@@ -179,8 +174,11 @@ namespace custom_pl
                 i = x;
                 return;
             }
+            else
+            {
+                add_output("Не найденъ Аминь");
+            }
         }
-
         public void read(int start, int end)
         {
             int i = start;
@@ -189,9 +187,77 @@ namespace custom_pl
             {
                 string word = find_next_space(ref i);
 
-                if (word == "молвить")
+                if (word == "молви")
                 {
-                    add_output(find_next_quotes(ref i));
+                    int x = i;
+                    while (input_textbox.Text[x] == ' ' && start != input_textbox.Text.Length - 2)
+                        x++;
+                    if (input_textbox.Text[x] == '"')
+                        add_output(find_next_quotes(ref i));
+                    else
+                    {
+                        string var = find_next_space(ref i);
+                        bool findet = false;
+                        int val;
+                        int numericValue;
+                        for (int z = 0; z < variables.Count; z++) //если целое
+                        {
+                            if (variables[z].type != 0)
+                                continue;
+
+                            if (variables[z].name != var)
+                                continue;
+
+                            val = variables[z].value;
+                            add_output(val.ToString());
+                            findet = true;
+                            break;
+                        }
+
+                        if(!findet)
+                        {
+                            for (int z = 0; z < variables.Count; z++) //если массив
+                            {
+                                if (variables[z].type != 1)
+                                    continue;
+
+                                if (variables[z].name != var)
+                                    continue;
+
+                                string vi = find_next_space(ref i);
+                                string pos = find_next_space(ref i);
+                                int pos_val = -1;
+                                if(vi == "въ")
+                                {
+                                    bool posisNumber = int.TryParse(pos, out numericValue);
+                                    if (posisNumber)
+                                    {
+                                        pos_val = (int)pos.EvalNumerical();
+                                    }
+                                    else
+                                    {
+                                        for (int e = 0; e < variables.Count; e++)
+                                        {
+                                            if (variables[e].type != 0)
+                                                continue;
+
+                                            if (variables[e].name != pos)
+                                                continue;
+
+                                            pos_val = variables[e].value;
+                                            findet = true;
+                                        }
+                                    }
+                                    if (pos_val != -1)
+                                    {
+                                        add_output(variables[z].arr[pos_val].ToString());
+                                    }
+                                }
+                                
+                            }
+                        }
+
+                    }
                 }
                 if (word == "придать")
                 {
@@ -250,6 +316,204 @@ namespace custom_pl
                                 pos_val = (int)pos.EvalNumerical();
 
                             variables[z].arr[pos_val] += (int)chislo.EvalNumerical();
+                            chislo = find_next_space(ref i);
+                            chislo = find_next_space(ref i);
+                            chislo = find_next_space(ref i);
+                            chislo = find_next_space(ref i);
+                            break;
+                        }
+                    }
+
+                }
+                if (word == "множить")
+                {
+                    bool success = false;
+                    string name = find_next_space_left(i - 2);
+                    string chislo = find_next_space(ref i);
+                    for (int z = 0; z < variables.Count; z++)
+                    {
+                        if (variables[z].type != 0)
+                            continue;
+
+                        if (variables[z].name != name)
+                            continue;
+
+                        variables[z].value *= (int)chislo.EvalNumerical();
+                        success = true;
+                        break;
+                    }
+
+
+                    if (!success)
+                    {
+                        string pos = name;
+                        name = find_next_space_left(ref i);
+                        name = find_next_space_left(ref i);
+                        name = find_next_space_left(ref i);
+                        string vi = find_next_space_left(ref i);
+                        name = find_next_space_left(ref i);
+
+                        for (int z = 0; z < variables.Count; z++)
+                        {
+
+
+                            if (variables[z].type != 1)
+                                continue;
+
+                            if (variables[z].name != name)
+                                continue;
+
+                            int numericValue, pos_val = 0;
+
+                            bool posisNumber = int.TryParse(pos, out numericValue);
+
+                            if (!posisNumber)
+                                for (int c = 0; c < variables.Count; c++)
+                                {
+                                    if (variables[c].type != 0)
+                                        continue;
+
+                                    if (variables[c].name != pos)
+                                        continue;
+
+                                    pos_val = variables[z].value;
+                                }
+                            else
+                                pos_val = (int)pos.EvalNumerical();
+
+                            variables[z].arr[pos_val] *= (int)chislo.EvalNumerical();
+                            chislo = find_next_space(ref i);
+                            chislo = find_next_space(ref i);
+                            chislo = find_next_space(ref i);
+                            chislo = find_next_space(ref i);
+                            break;
+                        }
+                    }
+
+                }
+                if (word == "дьлить")
+                {
+                    bool success = false;
+                    string name = find_next_space_left(i - 2);
+                    string chislo = find_next_space(ref i);
+                    for (int z = 0; z < variables.Count; z++)
+                    {
+                        if (variables[z].type != 0)
+                            continue;
+
+                        if (variables[z].name != name)
+                            continue;
+
+                        variables[z].value /= (int)chislo.EvalNumerical();
+                        success = true;
+                        break;
+                    }
+
+
+                    if (!success)
+                    {
+                        string pos = name;
+                        name = find_next_space_left(ref i);
+                        name = find_next_space_left(ref i);
+                        name = find_next_space_left(ref i);
+                        string vi = find_next_space_left(ref i);
+                        name = find_next_space_left(ref i);
+
+                        for (int z = 0; z < variables.Count; z++)
+                        {
+
+
+                            if (variables[z].type != 1)
+                                continue;
+
+                            if (variables[z].name != name)
+                                continue;
+
+                            int numericValue, pos_val = 0;
+
+                            bool posisNumber = int.TryParse(pos, out numericValue);
+
+                            if (!posisNumber)
+                                for (int c = 0; c < variables.Count; c++)
+                                {
+                                    if (variables[c].type != 0)
+                                        continue;
+
+                                    if (variables[c].name != pos)
+                                        continue;
+
+                                    pos_val = variables[z].value;
+                                }
+                            else
+                                pos_val = (int)pos.EvalNumerical();
+
+                            variables[z].arr[pos_val] /= (int)chislo.EvalNumerical();
+                            chislo = find_next_space(ref i);
+                            chislo = find_next_space(ref i);
+                            chislo = find_next_space(ref i);
+                            chislo = find_next_space(ref i);
+                            break;
+                        }
+                    }
+
+                }
+                if (word == "изъять")
+                {
+                    bool success = false;
+                    string name = find_next_space_left(i - 2);
+                    string chislo = find_next_space(ref i);
+                    for (int z = 0; z < variables.Count; z++)
+                    {
+                        if (variables[z].type != 0)
+                            continue;
+
+                        if (variables[z].name != name)
+                            continue;
+
+                        variables[z].value -= (int)chislo.EvalNumerical();
+                        success = true;
+                        break;
+                    }
+
+
+                    if (!success)
+                    {
+                        string pos = name;
+                        name = find_next_space_left(ref i);
+                        name = find_next_space_left(ref i);
+                        name = find_next_space_left(ref i);
+                        string vi = find_next_space_left(ref i);
+                        name = find_next_space_left(ref i);
+
+                        for (int z = 0; z < variables.Count; z++)
+                        {
+
+
+                            if (variables[z].type != 1)
+                                continue;
+
+                            if (variables[z].name != name)
+                                continue;
+
+                            int numericValue, pos_val = 0;
+
+                            bool posisNumber = int.TryParse(pos, out numericValue);
+
+                            if (!posisNumber)
+                                for (int c = 0; c < variables.Count; c++)
+                                {
+                                    if (variables[c].type != 0)
+                                        continue;
+
+                                    if (variables[c].name != pos)
+                                        continue;
+
+                                    pos_val = variables[z].value;
+                                }
+                            else
+                                pos_val = (int)pos.EvalNumerical();
+
+                            variables[z].arr[pos_val] -= (int)chislo.EvalNumerical();
                             chislo = find_next_space(ref i);
                             chislo = find_next_space(ref i);
                             chislo = find_next_space(ref i);
@@ -365,8 +629,6 @@ namespace custom_pl
                         else
                             pos_val = (int)pos.EvalNumerical();
 
-                        condition = find_next_space(ref i);
-
                         for (int z = 0; z < variables.Count; z++) //если массив
                         {
                             if (variables[z].type != 1)
@@ -424,14 +686,14 @@ namespace custom_pl
                     }
                     if (condition == "худо")
                     {
-                        if (var1_val > var2_val)
+                        if (var1_val >= var2_val)
                         {
                             find_inako(ref i, end);
                         }
                     }
                     if (condition == "вяще")
                     {
-                        if (var1_val > var2_val)
+                        if (var1_val <= var2_val)
                         {
                             find_inako(ref i, end);
                         }
@@ -439,19 +701,7 @@ namespace custom_pl
                 }
                 if (word == "инако")
                 {
-                    while (i < end)
-                    {
-                        if (input_textbox.Text[i] == '\n')
-                            break;
-                        i++;
-                    }
-                    i++;
-                    while (i < end)
-                    {
-                        if (input_textbox.Text[i] == '\n')
-                            break;
-                        i++;
-                    }
+                    find_inako(ref i, end);
                 }
                 if (word == "допрежь")
                 {
@@ -612,7 +862,162 @@ namespace custom_pl
                     }
 
                 }
-            
+                if (word == "стать")
+                {
+                    
+                    bool success = false, left_arr = false, left_int = false;
+                    string name = find_next_space_left(ref i);
+                    name = find_next_space_left(ref i);
+                    int i_test = i;
+                    string vi = find_next_space_left(ref i_test);
+                    string name_test = find_next_space_left(ref i_test);
+                    int right_var = 0, var_num = -1, pos_val = -1, pos_val_right = 0;
+                    int numericValue;
+
+
+                    //поиск слева
+
+
+
+                    for (int z = 0; z < variables.Count; z++)
+                    {
+                        if (variables[z].type != 1)
+                            continue;
+
+                        if (variables[z].name != name_test)
+                            continue;
+
+                        string pos = name;
+
+                        bool posisNumber = int.TryParse(pos, out numericValue);
+
+                        if (!posisNumber)
+                            for (int c = 0; c < variables.Count; c++)
+                            {
+                                if (variables[c].type != 0)
+                                    continue;
+
+                                if (variables[c].name != pos)
+                                    continue;
+
+                                pos_val = variables[c].value;
+                            }
+                        else
+                            pos_val = (int)pos.EvalNumerical();
+
+                        success = true;
+                        left_arr = true;
+                        var_num = z;
+                        find_next_space(ref i);
+                        find_next_space(ref i);
+                        name = find_next_space(ref i);
+                        break;
+                    }
+
+
+
+                    if (!success)
+                    {
+                        for (int z = 0; z < variables.Count; z++)
+                        {
+                            if (variables[z].type != 0)
+                                continue;
+
+                            if (variables[z].name != name)
+                                continue;
+
+                            success = true;
+                            left_int = true;
+                            var_num = z;
+                            find_next_space(ref i);
+                            find_next_space(ref i);
+                            name = find_next_space(ref i);
+                            break;
+                        }
+                    }
+
+                   
+
+
+
+
+                    //поиск справа
+
+
+
+
+                    success = false; 
+
+                    bool nameisNumber = int.TryParse(name, out numericValue);
+                    if(nameisNumber)
+                    {
+                        right_var = (int)name.EvalNumerical();
+                        success = true;
+                    }
+
+                    if (!success)
+                    {
+                        for (int z = 0; z < variables.Count; z++)
+                        {
+                            if (variables[z].type != 0)
+                                continue;
+
+                            if (variables[z].name != name)
+                                continue;
+
+                            right_var = variables[z].value;
+                            success = true;
+                            break;
+                        }
+                    }
+
+                    if (!success)
+                    {
+                        for (int z = 0; z < variables.Count; z++)
+                        {
+                            if (variables[z].type != 1)
+                                continue;
+
+                            if (variables[z].name != name)
+                                continue;
+
+                            vi = find_next_space(ref i);
+                            string pos = find_next_space(ref i);
+
+                            
+
+                            bool posisNumber = int.TryParse(pos, out numericValue);
+
+                            if (!posisNumber)
+                                for (int c = 0; c < variables.Count; c++)
+                                {
+                                    if (variables[c].type != 0)
+                                        continue;
+
+                                    if (variables[c].name != pos)
+                                        continue;
+
+                                    pos_val_right = variables[c].value;
+                                }
+                            else
+                                pos_val_right = (int)pos.EvalNumerical();
+
+                            right_var = variables[z].arr[pos_val_right];
+                            success = true;
+                            break;
+                        }
+                    }
+
+                    if(left_arr)
+                    {
+                        variables[var_num].arr[pos_val] = right_var;
+                    }
+                    if(left_int)
+                    {
+                        variables[var_num].value = right_var;
+                    }
+
+                }
             }
         }
         private void parsing(object sender, RoutedEventArgs e)
@@ -655,16 +1060,6 @@ namespace custom_pl
             var parameter = deserializer.Deserialize<code_param>(yalm);
             input_textbox.Text = parameter.code;
         }
-        /*
-        private void save(object sender, RoutedEventArgs e)
-        {
-            var yaml = input_textbox.Text.Replace("\n", "\n\n");
-            SaveFileDialog saveFileDialog = new SaveFileDialog();
-            saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            saveFileDialog.Filter = "Text file (*.txt)|*.txt";
-            if (saveFileDialog.ShowDialog() == true)
-                System.IO.File.WriteAllText(saveFileDialog.FileName, yaml);
-        */
         private void save(object sender, RoutedEventArgs e)
         {
             code_param parameter = new code_param();
