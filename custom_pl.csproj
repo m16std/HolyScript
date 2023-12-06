@@ -22,4 +22,8 @@
     <Resource Include="Семистрельныя_икона_с_частицей.jpg" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="example\" />
+  </ItemGroup>
+
 </Project>
